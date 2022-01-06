@@ -6,11 +6,6 @@ author: dozens of helpful people in the community who post open source plugins
 
 This is a list of functions that we use regularly, as well as when they fire. We'll never be able to document them all but hopefully this helps. Hook them with [Function Hooks](/functions/using_function_hooks/)
 
-The Bakkesmod caller will be based off of the Rocket League calling class / calling object name. Most functions are called by classes named Something_TA. Remove the _TA at the end and look for any wrappers with similar names. If a wrapper matches, that is the caller. For example, `"Function TAGame.Car_TA.OnHitBall"` is called by a `Car_TA`. The prefix is `Car`, so it's wrapped by [CarWrapper](/bakkesmod_api/Classes/Wrappers/GameObject/CarWrapper/). Not all callers are wrapped though.
-
-This image shows the breakdown of the function name  
-![functionnaming.png](/img/functionnaming.png)
-
 ## [BallWrapper Caller](/bakkesmod_api/Classes/Wrappers/GameObject/BallWrapper/)
 `"Function TAGame.Ball_TA.OnCarTouch"`  
 This event is called when a ball hits a car. The caller is the ball that hit, and the first parameter is the [CarWrapper](/bakkesmod_api/Classes/Wrappers/GameObject/CarWrapper/) touched
@@ -21,7 +16,9 @@ struct BallCarTouchParams {
 ```
 
 `"Function TAGame.Ball_TA.OnHitGoal"`  
-Happens when a goal is scored
+Happens when a goal is scored.  
+Note that this event is also called during the goal replay, if the player does not cancel it. If you want to filter out the event during goal replay, you can hook to
+`"Function GameEvent_Soccar_TA.ReplayPlayback.BeginState` and `"Function GameEvent_Soccar_TA.ReplayPlayback.EndState"` in order to e.g. set a `bool` flag while replay playback is active.
 
 `"Function TAGame.Ball_TA.Explode"`  
 Happens when a ball explodes. Usually this means a goal was scored
@@ -92,6 +89,15 @@ Called any time a stat should appear in the center of the screen, even if it's d
 ## [TeamWrapper Caller](/bakkesmod_api/Classes/Wrappers/GameObject/TeamWrapper/)
 `"Function TAGame.Team_TA.PostBeginPlay"`  
 Happens twice at the start of a match, once per team that is totally joined and ready. It can be used to detect the start of a match. This only works when the player is in the match as it starts, so it's inconsistent in casual where you can join matches in progress
+
+## [TrainingEditor Caller](bakkesmod_api/Classes/Wrappers/GameEvent/TrainingEditorWrapper/)
+`"Function TAGame.TrainingEditorMetrics_TA.TrainingShotAttempt"`  
+Called whenever an attempt is started in a custom training pack. An attempt counts as started if the player starts moving in any way. Selecting a different shot, or resetting the shot does not fire this event (until the player moves).
+If you are only interested in the initial ball touch for each shot, you can react to only the first `"Function TAGame.Ball_TA.OnCarTouch"` event after each `TrainingShotAttempt` for example.
+
+`"Function TAGame.GameEvent_TrainingEditor_TA.OnInit"`  
+Called whenever a new training pack is being loaded, or the current training pack was restarted.  
+Be aware that `_gameWrapper->IsInCustomTraining()` will not yet return `true` at this point.
 
 ## Unwrapped callers
 `"Function TAGame.GFxData_MainMenu_TA.MainMenuAdded"`  
